@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import './style.dart' as style;
 import 'package:http/http.dart' as http;
@@ -5,17 +6,23 @@ import 'dart:convert';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 void main() {
-  runApp(MaterialApp(
-    theme: style.theme,
-    // initialRoute: '/',
-    // routes: {
-    //   '/' : (c) => Text('첫페이지'),
-    //   '/detail' : (c) => Text('둘째페이지')
-    // },
-    home: MyApp(),
-  ));
+  runApp(
+    ChangeNotifierProvider(
+        create: (c) => State_Store(),
+        child: MaterialApp(
+            theme: style.theme,
+            // initialRoute: '/',
+            // routes: {
+            //   '/' : (c) => Text('첫페이지'),
+            //   '/detail' : (c) => Text('둘째페이지')
+            // },
+            home: MyApp(),
+            debugShowCheckedModeBanner: false)),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -30,6 +37,17 @@ class _MyAppState extends State<MyApp> {
   var data = [];
   var userImage;
   var userContent;
+
+  saveData() async {
+    var storage = await SharedPreferences.getInstance();
+
+    var map = {'age': 20, 'name': '장민수', 'sex': '남자'};
+    storage.setString('map', jsonEncode(map));
+
+    var result = storage.getString('map') ?? '없는뎁쇼?';
+
+    print(jsonDecode(result));
+  }
 
   addMyData() {
     var myData = {
@@ -65,6 +83,7 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     getData();
+    saveData();
   }
 
   @override
@@ -84,13 +103,6 @@ class _MyAppState extends State<MyApp> {
                     userImage = File(image.path);
                   });
                 }
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (c) => Upload(
-                            userImage: userImage,
-                            setUserContent: setUserContent,
-                            addMyData: addMyData)));
               },
               icon: Icon(Icons.add_box_outlined),
               iconSize: 30,
@@ -204,7 +216,7 @@ class _HomeState extends State<Home> {
     if (widget.data.isNotEmpty) {
       return ListView.builder(
           controller: scroll,
-          itemCount: 7,
+          itemCount: 4,
           itemBuilder: (c, i) {
             return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -212,12 +224,28 @@ class _HomeState extends State<Home> {
                   widget.data[i]['image'].runtimeType == String
                       ? Image.network(widget.data[i]['image'])
                       : Image.file(widget.data[i]['image']),
+                  GestureDetector(
+                    child: Text(widget.data[i]['user'],
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        )),
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (c, a1, a2) => Profile(),
+                            transitionsBuilder: (c, a1, a2, child) =>
+                                FadeTransition(opacity: a1, child: child),
+                            // transitionDuration: Duration(microseconds: 500000),
+                          ));
+                    },
+                  ),
                   Text(widget.data[i]['id'].toString()),
                   Text(widget.data[i]['likes'].toString()),
                   Text(widget.data[i]['date'].toString()),
                   Text(widget.data[i]['content'].toString()),
                   Text(widget.data[i]['liked'].toString()),
-                  Text(widget.data[i]['uesr'].toString()),
                 ]);
           });
     } else {
@@ -239,6 +267,7 @@ class Upload extends StatelessWidget {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.black),
         actions: [
           IconButton(
             onPressed: () {
@@ -284,6 +313,75 @@ class Upload extends StatelessWidget {
             },
             icon: Icon(Icons.close),
           )
+        ],
+      ),
+    );
+  }
+}
+
+class State_Store extends ChangeNotifier {
+  var name = 'bbyoungjun_is_live';
+  var follower = 0;
+  var follower2 = 1;
+
+  changeName() {
+    name = 'jjunni_food';
+    notifyListeners();
+  }
+
+  changeFollower() {
+    follower == follower2 ? follower = follower - 1 : follower = follower + 1;
+    notifyListeners();
+    print(follower);
+  }
+}
+
+class Profile extends StatelessWidget {
+  const Profile({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text(context.watch<State_Store>().name),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              CircleAvatar(
+                backgroundImage: AssetImage(
+                  'assets/몬스터.jpeg',
+                ),
+                backgroundColor: Colors.black,
+                radius: 40,
+              ),
+              Text('팔로워 ' +
+                  context.watch<State_Store>().follower.toString() +
+                  '명'),
+              ElevatedButton(
+                onPressed: () {
+                  context.read<State_Store>().changeFollower();
+                },
+                child: Text('팔로우'),
+                style: ElevatedButton.styleFrom(primary: Colors.blue),
+              )
+            ],
+          ),
+          // Center(
+          //   child: ElevatedButton(
+          //     onPressed: () {
+          //       context.read<State_Store>().changeName();
+          //     },
+          //     style: ElevatedButton.styleFrom(
+          //       primary: Colors.purple,
+          //     ),
+          //     child: Text('버튼'),
+          //   ),
+          // ),
         ],
       ),
     );
