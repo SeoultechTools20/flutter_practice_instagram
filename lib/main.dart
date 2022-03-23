@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 import './style.dart' as style;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:flutter/rendering.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 void main() {
-  runApp(
-      MaterialApp(
-          theme: style.theme,
-          home: MyApp()
-      )
-  );
+  runApp(MaterialApp(
+    theme: style.theme,
+    // initialRoute: '/',
+    // routes: {
+    //   '/' : (c) => Text('첫페이지'),
+    //   '/detail' : (c) => Text('둘째페이지')
+    // },
+    home: MyApp(),
+  ));
 }
 
 class MyApp extends StatefulWidget {
@@ -22,10 +28,33 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   var tab = 0;
   var data = [];
+  var userImage;
+  var userContent;
+
+  addMyData() {
+    var myData = {
+      'id': data.length,
+      'image': userImage,
+      'likes': 5,
+      'date': 'July 25',
+      'content': userContent,
+      'liked': false,
+      'user': 'John Kim'
+    };
+    setState(() {
+      data.add(myData);
+    });
+  }
+
+  setUserContent(a) {
+    setState(() {
+      userContent = a;
+    });
+  }
 
   getData() async {
-    var result = await http.get(
-        Uri.parse('https://codingapple1.github.io/app/data.json'));
+    var result = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/data.json'));
     var result2 = jsonDecode(result.body);
     setState(() {
       data = result2;
@@ -42,11 +71,27 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          iconTheme: IconThemeData(color: Colors.black),
           title: Text('Instagram'),
           centerTitle: true,
           actions: [
             IconButton(
-              onPressed: () {},
+              onPressed: () async {
+                var picker = ImagePicker();
+                var image = await picker.pickImage(source: ImageSource.gallery);
+                if (image != null) {
+                  setState(() {
+                    userImage = File(image.path);
+                  });
+                }
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (c) => Upload(
+                            userImage: userImage,
+                            setUserContent: setUserContent,
+                            addMyData: addMyData)));
+              },
               icon: Icon(Icons.add_box_outlined),
               iconSize: 30,
             )
@@ -63,56 +108,37 @@ class _MyAppState extends State<MyApp> {
                 ),
                 accountName: Text('몬스터'),
                 accountEmail: Text('monstercorp@naver.com'),
-                onDetailsPressed: (){
+                onDetailsPressed: () {
                   print('arrow is cliked');
                 },
                 decoration: BoxDecoration(
-                  color: Colors.blue,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(40.0),
-                    bottomRight: Radius.circular(40.0),
-
-                  )
-                ),
+                    color: Colors.blue,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(40.0),
+                      bottomRight: Radius.circular(40.0),
+                    )),
               ),
               ListTile(
-                leading: Icon(Icons.home,
-                color: Colors.indigoAccent
-                ),
-                title: Text('Home',
-                    style: TextStyle(
-                      color: Colors.black
-                    )
-                ),
-                onTap: (){
+                leading: Icon(Icons.home, color: Colors.indigoAccent),
+                title: Text('Home', style: TextStyle(color: Colors.black)),
+                onTap: () {
                   print('Home is Clicked');
                 },
                 trailing: Icon(Icons.add),
               ),
               ListTile(
-                leading: Icon(Icons.question_answer,
-                    color: Colors.indigoAccent
-                ),
-                title: Text('Q&A',
-                    style: TextStyle(
-                        color: Colors.black
-                    )
-                ),
-                onTap: (){
+                leading:
+                    Icon(Icons.question_answer, color: Colors.indigoAccent),
+                title: Text('Q&A', style: TextStyle(color: Colors.black)),
+                onTap: () {
                   print('Q&A is Clicked');
                 },
                 trailing: Icon(Icons.add),
               ),
               ListTile(
-                leading: Icon(Icons.settings,
-                    color: Colors.indigoAccent
-                ),
-                title: Text('Settings',
-                    style: TextStyle(
-                        color: Colors.black
-                    )
-                ),
-                onTap: (){
+                leading: Icon(Icons.settings, color: Colors.indigoAccent),
+                title: Text('Settings', style: TextStyle(color: Colors.black)),
+                onTap: () {
                   print('Settings is Clicked');
                 },
                 trailing: Icon(Icons.add),
@@ -140,10 +166,8 @@ class _MyAppState extends State<MyApp> {
               icon: Icon(Icons.shopping_bag_outlined),
               activeIcon: Icon(Icons.shopping_bag),
             ),
-
           ],
-        )
-    );
+        ));
   }
 }
 
@@ -152,39 +176,116 @@ class listView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-
-    );
+    return Container();
   }
 }
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   const Home({Key? key, this.data}) : super(key: key);
   final data;
 
   @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+  var scroll = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    scroll.addListener(() {
+      if (scroll.position.pixels == scroll.position.maxScrollExtent) {}
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (data.isNotEmpty) {
+    if (widget.data.isNotEmpty) {
       return ListView.builder(
-        itemCount: 3,
-        itemBuilder: (c, i) {
-          return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Image.network(data[i]['image']),
-                Text(data[i]['id'].toString()),
-                Text(data[i]['likes'].toString()),
-                Text(data[i]['date'].toString()),
-                Text(data[i]['content'].toString()),
-                Text(data[i]['liked'].toString()),
-                Text(data[i]['uesr'].toString()),
-              ]
-          );
-        }
-      );
-    }
-    else{
+          controller: scroll,
+          itemCount: 7,
+          itemBuilder: (c, i) {
+            return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  widget.data[i]['image'].runtimeType == String
+                      ? Image.network(widget.data[i]['image'])
+                      : Image.file(widget.data[i]['image']),
+                  Text(widget.data[i]['id'].toString()),
+                  Text(widget.data[i]['likes'].toString()),
+                  Text(widget.data[i]['date'].toString()),
+                  Text(widget.data[i]['content'].toString()),
+                  Text(widget.data[i]['liked'].toString()),
+                  Text(widget.data[i]['uesr'].toString()),
+                ]);
+          });
+    } else {
       return Text('로딩중임');
     }
-    }
   }
+}
+
+class Upload extends StatelessWidget {
+  const Upload({Key? key, this.userImage, this.setUserContent, this.addMyData})
+      : super(key: key);
+
+  final userImage;
+  final setUserContent;
+  final addMyData;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            onPressed: () {
+              showDialog<String>(
+                  context: context,
+                  builder: (BuildContext context) => AlertDialog(
+                        title: Text('사진 업로드 확인 상자'),
+                        content: Text('정말로 업로드 할거임?'),
+                        actions: [
+                          TextButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              },
+                              child: Text('아니오')),
+                          TextButton(
+                              onPressed: () async {
+                                await addMyData();
+                                Navigator.pop(context);
+                                Navigator.pop(context);
+                              },
+                              child: Text('예스'))
+                        ],
+                      ));
+            },
+            icon: Icon(Icons.send),
+          )
+        ],
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.file(userImage),
+          Text('업로드화면'),
+          TextField(
+            onChanged: (text) {
+              setUserContent(text);
+            },
+          ),
+          IconButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            icon: Icon(Icons.close),
+          )
+        ],
+      ),
+    );
+  }
+}
