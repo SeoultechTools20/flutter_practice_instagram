@@ -11,8 +11,11 @@ import 'package:provider/provider.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-        create: (c) => State_Store(),
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (c) => State_Store()),
+          ChangeNotifierProvider(create: (c) => State_Store2())
+        ],
         child: MaterialApp(
             theme: style.theme,
             // initialRoute: '/',
@@ -103,6 +106,13 @@ class _MyAppState extends State<MyApp> {
                     userImage = File(image.path);
                   });
                 }
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (c) => Upload(
+                            userImage: userImage,
+                            setUserContent: setUserContent,
+                            addMyData: addMyData)));
               },
               icon: Icon(Icons.add_box_outlined),
               iconSize: 30,
@@ -216,7 +226,7 @@ class _HomeState extends State<Home> {
     if (widget.data.isNotEmpty) {
       return ListView.builder(
           controller: scroll,
-          itemCount: 4,
+          itemCount: 3,
           itemBuilder: (c, i) {
             return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,49 +329,92 @@ class Upload extends StatelessWidget {
   }
 }
 
-class State_Store extends ChangeNotifier {
+class State_Store2 extends ChangeNotifier {
   var name = 'bbyoungjun_is_live';
-  var follower = 0;
-  var follower2 = 1;
+  var change = false;
 
   changeName() {
-    name = 'jjunni_food';
+    if (change == false) {
+      name = 'jjunni_food';
+      change = true;
+    } else {
+      name = 'bbyoungjun_is_live';
+      change = false;
+    }
     notifyListeners();
-  }
-
-  changeFollower() {
-    follower == follower2 ? follower = follower - 1 : follower = follower + 1;
-    notifyListeners();
-    print(follower);
   }
 }
 
-class Profile extends StatelessWidget {
+class State_Store extends ChangeNotifier {
+  var follower = 0;
+  var friend = false;
+  var profileImage = [];
+
+  getData() async {
+    var image = await http
+        .get(Uri.parse('https://codingapple1.github.io/app/profile.json'));
+    var result = jsonDecode(image.body);
+    profileImage = result;
+    notifyListeners();
+    print(profileImage);
+  }
+
+  changeFollower() {
+    if (friend == false) {
+      follower++;
+      friend = true;
+    } else {
+      follower--;
+      friend = false;
+    }
+    notifyListeners();
+  }
+}
+
+class Profile extends StatefulWidget {
   const Profile({Key? key}) : super(key: key);
 
   @override
+  State<Profile> createState() => _ProfileState();
+}
+
+class _ProfileState extends State<Profile> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<State_Store>().getData();
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        title: Text(context.watch<State_Store>().name),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              CircleAvatar(
-                backgroundImage: AssetImage(
-                  'assets/몬스터.jpeg',
-                ),
-                backgroundColor: Colors.black,
-                radius: 40,
+        appBar: AppBar(
+          iconTheme: IconThemeData(color: Colors.black),
+          title: Text(context.watch<State_Store2>().name),
+          centerTitle: true,
+        ),
+        body: ProfileHeader());
+  }
+}
+
+class ProfileHeader extends StatelessWidget {
+  const ProfileHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            CircleAvatar(
+              backgroundImage: AssetImage(
+                'assets/몬스터.jpeg',
               ),
-              Text('팔로워 ' +
-                  context.watch<State_Store>().follower.toString() +
-                  '명'),
+              backgroundColor: Colors.black,
+              radius: 40,
+            ),
+            Text('팔로워 ${context.watch<State_Store>().follower.toString()}명'),
+            if (context.watch<State_Store>().friend == false)
               ElevatedButton(
                 onPressed: () {
                   context.read<State_Store>().changeFollower();
@@ -369,21 +422,39 @@ class Profile extends StatelessWidget {
                 child: Text('팔로우'),
                 style: ElevatedButton.styleFrom(primary: Colors.blue),
               )
-            ],
-          ),
-          // Center(
-          //   child: ElevatedButton(
-          //     onPressed: () {
-          //       context.read<State_Store>().changeName();
-          //     },
-          //     style: ElevatedButton.styleFrom(
-          //       primary: Colors.purple,
-          //     ),
-          //     child: Text('버튼'),
-          //   ),
-          // ),
-        ],
-      ),
+            else
+              ElevatedButton(
+                onPressed: () {
+                  context.read<State_Store>().changeFollower();
+                },
+                child: Text('팔로우 해제'),
+                style: ElevatedButton.styleFrom(primary: Colors.grey),
+              ),
+
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                context.read<State_Store>().getData();
+              },
+              child: Text('사진 가져오기'),
+              style: ElevatedButton.styleFrom(primary: Colors.blue),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.read<State_Store2>().changeName();
+              },
+              style: ElevatedButton.styleFrom(
+                primary: Colors.purple,
+              ),
+              child: Text('쭈니 이름 변경'),
+            ),
+          ],
+        )
+      ],
     );
   }
 }
