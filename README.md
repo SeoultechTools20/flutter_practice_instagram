@@ -1,16 +1,19 @@
-# instagram
+# Practice flutter using dart language
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## function
+#### 1. main_page ✅
+#### 2. image_upload ✅
+#### 3. get image from phone & network ✅
+#### 4. drawer_page ✅
+#### 5. provider ✅
+#### 5. style(ThemeData)
+- similar with css
+#### 6. user detail page ✅
+#### 7. local notification
+#### 8. follow button
+#### 9. connect with firebase
+#### 10. reactive screen sizes
+#### 11. user authorization
+#### 12.
+#### 13.
+#### 14.
