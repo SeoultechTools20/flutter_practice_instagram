@@ -1,4 +1,4 @@
-# ⭐️ Practice flutter using dart language ⭐️
+# ⭐️ flutter practice ⭐️
 
 ## function
 #### 1. main_page ✅
