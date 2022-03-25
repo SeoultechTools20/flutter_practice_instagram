@@ -8,6 +8,9 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
+import 'homepage.dart';
+import 'img_upload.dart';
+import 'profile.dart';
 
 void main() {
   runApp(
@@ -193,157 +196,6 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-class listView extends StatelessWidget {
-  const listView({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
-class Home extends StatefulWidget {
-  const Home({Key? key, this.data}) : super(key: key);
-  final data;
-
-  @override
-  State<Home> createState() => _HomeState();
-}
-
-class _HomeState extends State<Home> {
-  var scroll = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    scroll.addListener(() {
-      if (scroll.position.pixels == scroll.position.maxScrollExtent) {}
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (widget.data.isNotEmpty) {
-      return ListView.builder(
-          controller: scroll,
-          itemCount: 3,
-          itemBuilder: (c, i) {
-            return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  widget.data[i]['image'].runtimeType == String
-                      ? Image.network(widget.data[i]['image'])
-                      : Image.file(widget.data[i]['image']),
-                  GestureDetector(
-                    child: Text(widget.data[i]['user'],
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        )),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (c, a1, a2) => Profile(),
-                            transitionsBuilder: (c, a1, a2, child) =>
-                                FadeTransition(opacity: a1, child: child),
-                            // transitionDuration: Duration(microseconds: 500000),
-                          ));
-                    },
-                  ),
-                  Text(widget.data[i]['id'].toString()),
-                  Text(widget.data[i]['likes'].toString()),
-                  Text(widget.data[i]['date'].toString()),
-                  Text(widget.data[i]['content'].toString()),
-                  Text(widget.data[i]['liked'].toString()),
-                ]);
-          });
-    } else {
-      return Text('로딩중임');
-    }
-  }
-}
-
-class Upload extends StatelessWidget {
-  const Upload({Key? key, this.userImage, this.setUserContent, this.addMyData})
-      : super(key: key);
-
-  final userImage;
-  final setUserContent;
-  final addMyData;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.black),
-        actions: [
-          IconButton(
-            onPressed: () {
-              showDialog<String>(
-                  context: context,
-                  builder: (BuildContext context) => AlertDialog(
-                        title: Text('사진 업로드 확인 상자'),
-                        content: Text('정말로 업로드 할거임?'),
-                        actions: [
-                          TextButton(
-                              onPressed: () {
-                                Navigator.pop(context);
-                                Navigator.pop(context);
-                              },
-                              child: Text('아니오')),
-                          TextButton(
-                              onPressed: () async {
-                                await addMyData();
-                                Navigator.pop(context);
-                                Navigator.pop(context);
-                              },
-                              child: Text('예스'))
-                        ],
-                      ));
-            },
-            icon: Icon(Icons.send),
-          )
-        ],
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Image.file(userImage),
-          Text('업로드화면'),
-          TextField(
-            onChanged: (text) {
-              setUserContent(text);
-            },
-          ),
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: Icon(Icons.close),
-          )
-        ],
-      ),
-    );
-  }
-}
-
-class State_Store2 extends ChangeNotifier {
-  var name = 'bbyoungjun_is_live';
-  var change = false;
-
-  changeName() {
-    if (change == false) {
-      name = 'jjunni_food';
-      change = true;
-    } else {
-      name = 'bbyoungjun_is_live';
-      change = false;
-    }
-    notifyListeners();
-  }
-}
 
 class State_Store extends ChangeNotifier {
   var follower = 0;
@@ -371,90 +223,19 @@ class State_Store extends ChangeNotifier {
   }
 }
 
-class Profile extends StatefulWidget {
-  const Profile({Key? key}) : super(key: key);
+class State_Store2 extends ChangeNotifier {
+  var name = 'fd_gallery_';
+  var change = false;
 
-  @override
-  State<Profile> createState() => _ProfileState();
-}
-
-class _ProfileState extends State<Profile> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<State_Store>().getData();
-  }
-
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          iconTheme: IconThemeData(color: Colors.black),
-          title: Text(context.watch<State_Store2>().name),
-          centerTitle: true,
-        ),
-        body: ProfileHeader());
+  changeName() {
+    if (change == false) {
+      name = 'jjunni_food';
+      change = true;
+    } else {
+      name = 'bbyoungjun_is_live';
+      change = false;
+    }
+    notifyListeners();
   }
 }
 
-class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            CircleAvatar(
-              backgroundImage: AssetImage(
-                'assets/몬스터.jpeg',
-              ),
-              backgroundColor: Colors.black,
-              radius: 40,
-            ),
-            Text('팔로워 ${context.watch<State_Store>().follower.toString()}명'),
-            if (context.watch<State_Store>().friend == false)
-              ElevatedButton(
-                onPressed: () {
-                  context.read<State_Store>().changeFollower();
-                },
-                child: Text('팔로우'),
-                style: ElevatedButton.styleFrom(primary: Colors.blue),
-              )
-            else
-              ElevatedButton(
-                onPressed: () {
-                  context.read<State_Store>().changeFollower();
-                },
-                child: Text('팔로우 해제'),
-                style: ElevatedButton.styleFrom(primary: Colors.grey),
-              ),
-
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                context.read<State_Store>().getData();
-              },
-              child: Text('사진 가져오기'),
-              style: ElevatedButton.styleFrom(primary: Colors.blue),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                context.read<State_Store2>().changeName();
-              },
-              style: ElevatedButton.styleFrom(
-                primary: Colors.purple,
-              ),
-              child: Text('쭈니 이름 변경'),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-}
